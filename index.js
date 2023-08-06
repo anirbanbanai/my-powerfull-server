@@ -12,45 +12,61 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
+    serverApi: {
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+    },
 });
 
 async function run() {
-  try {
-    // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    try {
+        // Connect the client to the server	(optional starting in v4.7)
+        await client.connect();
 
-    const postCollection = client.db("postMaker").collection("post")
+        const postCollection = client.db("postMaker").collection("post")
+        const userCollection = client.db("postMaker").collection("user")
 
-    app.get('/postt', async(req,res)=>{
-        const result = await postCollection.find().toArray();
-        res.send(result)
-    })
+        app.get('/postt', async (req, res) => {
+            const result = await postCollection.find().sort({ date: -1 }).toArray();
+            res.send(result)
+        })
+        app.get('/userr', async (req, res) => {
+            const result = await userCollection.find().toArray();
+            res.send(result)
+        })
 
-    app.post("/post", async(req, res )=>{
-        const user= req.body;
-        const result = await postCollection.insertOne(user);
-        res.send(result)
-    })
+        app.post("/post", async (req, res) => {
+            const user = req.body;
+            const result = await postCollection.insertOne(user);
+            res.send(result)
+        })
+        app.post("/user", async (req, res) => {
+            const user = req.body;
+            const result = await userCollection.insertOne(user);
+            res.send(result)
+        })
 
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-  } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
-  }
+        app.get("/post", async (req, res) => {
+            const query = { email: req.query.email }
+            const result = await postCollection.find(query).sort({ date: -1 }).toArray();
+            res.send(result)
+        })
+
+        // Send a ping to confirm a successful connection
+        await client.db("admin").command({ ping: 1 });
+        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    } finally {
+        // Ensures that the client will close when you finish/error
+        // await client.close();
+    }
 }
 run().catch(console.dir);
 
 app.get('/', (req, res) => {
-  res.send("Toy making server is runninggggg");
+    res.send("Toy making server is runninggggg");
 });
 
 app.listen(port, () => {
-  console.log(`Server is running on ${port}`);
+    console.log(`Server is running on ${port}`);
 });
