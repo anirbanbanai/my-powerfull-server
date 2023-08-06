@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion,ObjectId } = require('mongodb');
 require('dotenv').config();
 const port = process.env.PORT || 4000;
 app.use(cors());
@@ -26,6 +26,7 @@ async function run() {
 
         const postCollection = client.db("postMaker").collection("post")
         const userCollection = client.db("postMaker").collection("user")
+        const bioCollection = client.db("postMaker").collection("bio")
 
         app.get('/postt', async (req, res) => {
             const result = await postCollection.find().sort({ date: -1 }).toArray();
@@ -50,6 +51,42 @@ async function run() {
         app.get("/post", async (req, res) => {
             const query = { email: req.query.email }
             const result = await postCollection.find(query).sort({ date: -1 }).toArray();
+            res.send(result)
+        })
+
+        app.get("/userr/:id", async(req, res)=>{
+            const id= req.params.id;
+            const query = {_id: new ObjectId(id)};
+            const result = await userCollection.findOne(query);
+            res.send(result)
+        })
+
+        app.get("/bio", async(req, res)=>{
+            const result = await bioCollection.find().toArray();
+            res.send(result)
+        })
+        app.get("/biod", async (req, res) => {
+            const query = { email: req.query.email }
+            const result = await bioCollection.find(query).toArray();
+            res.send(result)
+        })
+        app.post('/bio', async (req, res) => {
+            const user = req.body;
+            console.log(user);
+            const result = await bioCollection.insertOne(user);
+            res.send(result)
+        })
+
+        app.patch('/bio/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const updated = req.body;
+            const updatedBio = {
+                $set: {
+                    bio: updated.bio,
+                }
+            }
+            const result = await bioCollection.updateOne(filter, updatedBio);
             res.send(result)
         })
 
